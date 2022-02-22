@@ -10,7 +10,27 @@
  2. 在右侧输入信息后，左侧json框同步更新，适合学习json配置
  3. 支持生成 QRCode 客户端分享链接，以及对应url
  
+ 
+ ## 关于完全单html的使用
+ 
  目前还包含 tailwind和 vue2的 js文件；如果想要单html文件也不难，把链接换成cdn的链接即可，缺点就是加载慢一点，因为并不是完全本地文件了。
+ 
+ 具体是
+ 
+ 把
+```html
+<script src="tailwindcss.js"></script>
+<script src="vue.js"></script>
+```
+ 
+ 换成
+ 
+ ```html
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+ ```
+
+ 
  
  
  ![p1](p1.jpg)
@@ -18,6 +38,8 @@
  ![p1](p3.jpg)
 
 ## 使用方式
+
+下载本仓库，双击 html文件打开浏览器。
 
 点击、输入，生成想要的json文件后，复制 xxx.json 框里的内容，依照网页里的提示，在服务端创建 对应的 xxx.json 文件，粘贴到里面。
 
