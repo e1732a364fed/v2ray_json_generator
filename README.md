@@ -7,6 +7,10 @@
  本app优点：1.完全本地；2： 在右侧输入信息后，左侧json框同步更新，适合学习json配置
  
  目前还包含 tailwind和 vue2的 js文件；如果想要单html文件也不难，把链接换成cdn的链接即可，缺点就是加载慢一点，因为并不是完全本地文件了。
-
+ 
+ 
+ ![p1](p1.jpg)
+ ![p1](p2.jpg)
+ ![p1](p3.jpg)
 
 交流电报群： https://t.me/shadowrocket_unofficial
