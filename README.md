@@ -8,3 +8,5 @@
  
  目前还包含 tailwind和 vue2的 js文件；如果想要单html文件也不难，把链接换成cdn的链接即可，缺点就是加载慢一点，因为并不是完全本地文件了。
 
+
+交流电报群： https://t.me/shadowrocket_unofficial
