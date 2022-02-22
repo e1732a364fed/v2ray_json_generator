@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="tailwindcss.js"></script>
+    <script src="vue.js"></script>
+
+    <style type="text/tailwindcss">
+      @tailwind base;
+      @layer base {
+        h1 {
+          @apply text-5xl;
+        }
+        h2 {
+          @apply text-4xl;
+        }
+        h3 {
+          @apply text-3xl;
+        }
+        h4 {
+          @apply text-2xl;
+        }
+        h5 {
+          @apply text-xl;
+        }
+        h6 {
+          @apply text-lg;
+        }
+        button {
+          @apply mx-6 px-1 bg-blue-200 text-black border border-black;
+        }
+        textarea {
+          @apply bg-gray-800 text-gray-200 border border-black flex-grow;
+        }
+      }
+    </style>
+  </head>
+
+  <body class="bg-gray-400">
+    <div class="flex flex-col">
+      <div class="w-full h-12 bg-red-400">
+        <h1 class="text-4xl">V2ray Json Generator</h1>
+      </div>
+      <p>
+        <a
+          class="text-blue-600 italic"
+          href="https://www.v2fly.org/config/overview.html"
+          >See v2ray document</a
+        >
+      </p>
+      <div id="app-2" class="px-12">
+        <div class="flex flex-col">
+          <h1 class="pb-12 border-black border-2">Server Settings</h1>
+          <div class="mb-12">
+            <h2 class="mb-6">Guide</h2>
+
+            <p>
+              We encourage using "/usr/local/bin/v2ray -confdir
+              /usr/local/etc/v2ray/conf.d" as service.
+            </p>
+            <p>
+              This way, we can seperate different settings in different files
+            </p>
+          </div>
+
+          <h2 class="mb-6">General</h2>
+          <div class="grid md:grid-cols-3 space-x-6 mb-12">
+            <div class="flex flex-col">
+              <h3>routing.json (can be nil)</h3>
+              <textarea
+                rows="13"
+                ref="textForm"
+                class="ta1"
+                v-html="getJsonOf({'routing':routing})"
+              ></textarea>
+            </div>
+            <div class="flex flex-col">
+              <h3>log.json</h3>
+              <textarea
+                rows="13"
+                ref="textForm"
+                class="ta1"
+                v-html="getJsonOf({'log':log})"
+              ></textarea>
+            </div>
+            <div class="flex flex-col">
+              <h3>outbounds.json</h3>
+              <textarea
+                rows="13"
+                ref="textForm"
+                class="ta1"
+                v-html="getJsonOf({'outbounds':outbounds})"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="flex flex-col w-full space-y-12">
+          <h1 class="text-4xl">Inbounds</h1>
+          <button class="btn1" @click="createNewInbound">
+            Create a New Inbound
+          </button>
+
+          <ul class="w-full">
+            <li v-for="(ib, index) in inbounds" class="w-full mb-12">
+              <p v-html="ib.tag"></p>
+
+              <div class="flex w-full">
+                <div class="flex flex-col w-1/4">
+                  <textarea
+                    rows="3"
+                    ref="textForm"
+                    class="flex-grow"
+                    v-html="getJsonOf(ib)"
+                    readonly
+                  ></textarea>
+
+                  <button @click="updateSelf">update</button>
+                </div>
+
+                <div class="flex-grow mx-12 space-y-6">
+                  <button class="btn1" @click="deleteInbound(index)">
+                    Delete This Inbound
+                  </button>
+
+                  <div class="flex space-x-6">
+                    <p>Tag</p>
+                    <input type="text" v-model="ib.tag" />
+                  </div>
+
+                  <div class="flex space-x-6">
+                    <strong>Listen*</strong>
+                    <input type="text" v-model="ib.listen" />
+                  </div>
+
+                  <div class="flex space-x-6">
+                    <p>Port</p>
+                    <input type="number" v-model.number="ib.port" />
+                  </div>
+
+                  <div class="flex space-x-6">
+                    <p>Protocol*</p>
+                    <select value="vmess" v-model="ib.protocol">
+                      <option value="vmess">vmess</option>
+                      <option value="vless">vless</option>
+                      <option value="http">http</option>
+                    </select>
+                  </div>
+
+                  <div class="bg-purple-400 flex flex-col space-y-6">
+                    <p class="text-2xl">Settings</p>
+                    <div class="flex space-x-6 mb-6">
+                      <strong>clients*:</strong>
+                      <button class="btn1" @click="addInboundClient(index)">
+                        Add another client
+                      </button>
+                    </div>
+
+                    <div class="space-y-4">
+                      <div class="flex flex-col">
+                        <div
+                          v-for="(cli, cid) in ib.settings.clients"
+                          class="flex space-y-6 my-6 bg-red-200 ml-12"
+                        >
+                          <div class="flex flex-col">
+                            <div class="flex space-x-6 w-full">
+                              <p>id*</p>
+                              <input type="text" v-model="cli.id" />
+                            </div>
+
+                            <div class="flex space-x-6 w-full">
+                              <p>email</p>
+                              <input type="text" v-model="cli.email" />
+                            </div>
+
+                            <div class="flex space-x-6">
+                              <p>level</p>
+                              <input type="number" v-model="cli.level" />
+                            </div>
+
+                            <div
+                              v-if="ib.protocol=='vless' && useXray"
+                              class="flex space-x-6 w-full"
+                            >
+                              <p>flow</p>
+                              <select value="ws" v-model="cli.flow">
+                                <option value="xtls-rprx-direct">
+                                  xtls-rprx-direct
+                                </option>
+                                <option value="xtls-rprx-splice">
+                                  xtls-rprx-splice
+                                </option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <button @click="deleteClient(index,cid)">
+                            Delete This
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div
+                      v-if="ib.protocol=='vmess' && addVmessDetour(index)"
+                      class="space-y-10"
+                    >
+                      <div class="flex space-x-6">
+                        <p>detour</p>
+                        <input
+                          type="text"
+                          placeholder="tag_to_detour"
+                          v-model="ib.settings.detour.to"
+                        />
+                      </div>
+
+                      <div class="flex space-x-6">
+                        <p>disableInsecureEncryption</p>
+                        <select
+                          value="false"
+                          v-model="ib.disableInsecureEncryption"
+                        >
+                          <option value="false">false</option>
+                          <option value="true">true</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div
+                      v-if="ib.protocol=='vless' && addDecryptionNone(index)"
+                      class="space-y-10"
+                    >
+                      <div class="flex space-x-6">
+                        <p>
+                          <strong>decryption:</strong> {{ ib.settings.decryption
+                          }}
+                        </p>
+                      </div>
+
+                      <div class="bg-blue-400">
+                        <strong>fallbacks:</strong>
+                        <button
+                          class="btn1 my-6"
+                          @click="addInboundFallbackForVless(index)"
+                        >
+                          Add new fallback
+                        </button>
+                        <div class="ml-12 space-y-5 border border-black">
+                          <div
+                            v-for="(fb, fid) in ib.settings.fallbacks"
+                            class="border border-black flex"
+                          >
+                            <div class="flex flex-col space-y-3">
+                              <div class="flex space-x-6">
+                                <p>dest</p>
+                                <input type="number" v-model="fb.dest" />
+                              </div>
+
+                              <div class="flex space-x-6">
+                                <p>xver</p>
+                                <input type="number" v-model="fb.xver" />
+                              </div>
+
+                              <div class="flex space-x-6">
+                                <p>path</p>
+                                <input
+                                  type="text"
+                                  placeholder="/ray"
+                                  v-model="fb.path"
+                                />
+                              </div>
+                            </div>
+
+                            <div class="flex items-center flex-1 justify-end">
+                              <button
+                                @click="deleteFallback(index,fid)"
+                                class="m-3"
+                              >
+                                Delete This
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="bg-green-400 space-y-4">
+                    <h4>Stream Settings</h4>
+                    <div class="flex space-x-6">
+                      <p>Network</p>
+                      <select v-model="ib.streamSettings.network">
+                        <option value="ws">ws</option>
+                        <option value="grpc">grpc</option>
+                        <option value="tcp">tcp</option>
+                      </select>
+                    </div>
+
+                    <div class="flex space-x-6">
+                      <p>Security</p>
+                      <select value="none" v-model="ib.streamSettings.security">
+                        <option value="tls">tls</option>
+                        <option value="none">none</option>
+                      </select>
+                    </div>
+
+                    <div v-if="ib.streamSettings.network == 'ws'">
+                      <h4>wsSettings</h4>
+                      <div class="flex space-x-6">
+                        <p>path</p>
+                        <input
+                          type="text"
+                          placeholder="/ray"
+                          v-model="ib.streamSettings.wsSettings.path"
+                        />
+                      </div>
+                    </div>
+
+                    <div v-if="ib.streamSettings.network == 'grpc'">
+                      <h4>grpcSettings</h4>
+                      <div class="flex space-x-6">
+                        <p>serviceName</p>
+                        <input
+                          type="text"
+                          v-bind:placeholder="Math.random().toString(36).slice(-8)"
+                          v-model="ib.streamSettings.grpcSettings.serviceName"
+                        />
+                      </div>
+                    </div>
+
+                    <div
+                      v-if="ib.streamSettings.security == 'tls'"
+                      class="bg-red-400"
+                    >
+                      <p class="text-2xl">tlsSettings</p>
+
+                      <div class="flex flex-col space-x-6py-12">
+                        <p>certificates</p>
+
+                        <button
+                          class="btn1 my-6"
+                          @click="addInboundNewTlsCertificate(index)"
+                        >
+                          Add new Certificate
+                        </button>
+
+                        <ul>
+                          <li
+                            v-for="(c, cid) in ib.streamSettings.tlsSettings.certificates"
+                            class="space-y-2 pb-6 flex"
+                          >
+                            <div class="flex flex-col">
+                              <div class="flex space-x-6">
+                                <p>keyFile</p>
+                                <input
+                                  type="text"
+                                  placeholder="/path/to/key.key"
+                                  v-model="c.keyFile"
+                                />
+                              </div>
+
+                              <div class="flex space-x-6">
+                                <p>certificateFile</p>
+                                <input
+                                  type="text"
+                                  placeholder="/path/to/certificate.crt"
+                                  v-model="c.certificateFile"
+                                />
+                              </div>
+                            </div>
+
+                            <button class="btn1" @click="deleteCert(index,cid)">
+                              Delete This
+                            </button>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+
+                    <div
+                      v-if="ib.streamSettings.network == 'tcp'"
+                      class="bg-yellow-400"
+                    >
+                      <h5 class="mb-2">tcpSettings</h5>
+
+                      <div class="flex mb-2">
+                        <p>type</p>
+                        <select
+                          value="none"
+                          v-model="ib.streamSettings.tcpSettings.header.type"
+                        >
+                          <option value="http">http</option>
+                          <option value="none">none</option>
+                        </select>
+                      </div>
+
+                      <div
+                        v-if="ib.streamSettings.tcpSettings.header.type == 'http'"
+                        class="mb-2"
+                      >
+                        <h6>request</h6>
+                        <div class="flex space-x-6">
+                          <p>version</p>
+                          <input
+                            type="text"
+                            placeholder="1.1"
+                            v-model="ib.streamSettings.tcpSettings.header.request.version"
+                          />
+                        </div>
+
+                        <div class="flex space-x-6">
+                          <p>method</p>
+                          <input
+                            type="text"
+                            placeholder="Get"
+                            v-model="ib.streamSettings.tcpSettings.header.request.method"
+                          />
+                        </div>
+
+                        <div class="flex flex-col space-x-6">
+                          <p>path</p>
+
+                          <div
+                            v-for="(p, pathIdx) in ib.streamSettings.tcpSettings.header.request.path"
+                            class="flex"
+                          >
+                            <input
+                              type="text"
+                              v-model="ib.streamSettings.tcpSettings.header.request.path[pathIdx]"
+                              :key="pathIdx"
+                            />
+
+                            <button
+                              @click="ib.streamSettings.tcpSettings.header.request.path.splice(pathIdx, 1);"
+                            >
+                              delete this
+                            </button>
+                          </div>
+                          <button
+                            @click="ib.streamSettings.tcpSettings.header.request.path.push('/path1')"
+                          >
+                            Add New path
+                          </button>
+                        </div>
+
+                        <div class="border border-black p-2">
+                          <p>headers</p>
+
+                          <div class="flex">
+                            <p>Pragma</p>
+                            <input
+                              type="text"
+                              v-model="ib.streamSettings.tcpSettings.header.request.headers.Pragma"
+                              placeholder="no-cache"
+                            />
+                          </div>
+
+                          <div>
+                            <p>Host</p>
+
+                            <div
+                              v-for="(p, hostIdx) in ib.streamSettings.tcpSettings.header.request.headers.Host"
+                              class="flex"
+                            >
+                              <input
+                                type="text"
+                                v-model="ib.streamSettings.tcpSettings.header.request.headers.Host[hostIdx]"
+                                :key="hostIdx"
+                              />
+
+                              <button
+                                @click="ib.streamSettings.tcpSettings.header.request.headers.Host.splice(hostIdx, 1);"
+                              >
+                                delete this
+                              </button>
+                            </div>
+                            <button
+                              @click="ib.streamSettings.tcpSettings.header.request.headers.Host.push('www.baidu.com')"
+                            >
+                              Add New Host
+                            </button>
+                          </div>
+
+                          <div>
+                            <p>User-Agent</p>
+
+                            <div
+                              v-for="(p, uaIdx) in ib.streamSettings.tcpSettings.header.request.headers['User-Agent']"
+                              class="flex"
+                            >
+                              <input
+                                type="text"
+                                v-model="ib.streamSettings.tcpSettings.header.request.headers['User-Agent'][uaIdx]"
+                                :key="uaIdx"
+                              />
+
+                              <button
+                                @click="ib.streamSettings.tcpSettings.header.request.headers['User-Agent'].splice(uaIdx, 1);"
+                              >
+                                delete this
+                              </button>
+                            </div>
+                            <button
+                              @click="ib.streamSettings.tcpSettings.header.request.headers['User-Agent'].push('Mozilla/5.0')"
+                            >
+                              Add New User-Agent
+                            </button>
+                          </div>
+
+                          <div>
+                            <p>Accept-Encoding</p>
+
+                            <div
+                              v-for="(p, aeIdx) in ib.streamSettings.tcpSettings.header.request.headers['Accept-Encoding']"
+                              class="flex"
+                            >
+                              <input
+                                type="text"
+                                v-model="ib.streamSettings.tcpSettings.header.request.headers['Accept-Encoding'][aeIdx]"
+                                :key="aeIdx"
+                              />
+
+                              <button
+                                @click="ib.streamSettings.tcpSettings.header.request.headers['Accept-Encoding'].splice(aeIdx, 1);"
+                              >
+                                delete this
+                              </button>
+                            </div>
+                            <button
+                              @click="ib.streamSettings.tcpSettings.header.request.headers['Accept-Encoding'].push('gzip, deflate')"
+                            >
+                              Add New Accept-Encoding
+                            </button>
+                          </div>
+
+                          <div>
+                            <p>Connection</p>
+
+                            <div
+                              v-for="(p, connIdx) in ib.streamSettings.tcpSettings.header.request.headers.Connection"
+                              class="flex"
+                            >
+                              <input
+                                type="text"
+                                v-model="ib.streamSettings.tcpSettings.header.request.headers.Connection[connIdx]"
+                                :key="connIdx"
+                              />
+
+                              <button
+                                @click="ib.streamSettings.tcpSettings.header.request.headers.Connection.splice(connIdx, 1);"
+                              >
+                                delete this
+                              </button>
+                            </div>
+                            <button
+                              @click="ib.streamSettings.tcpSettings.header.request.headers.Connection.push('keep-alive')"
+                            >
+                              Add New Connection
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div
+                        v-if="ib.streamSettings.tcpSettings.header.type == 'http'"
+                      >
+                        <h6>response</h6>
+                        <div class="flex space-x-6">
+                          <p>version</p>
+                          <input
+                            type="text"
+                            placeholder="1.1"
+                            v-model="ib.streamSettings.tcpSettings.header.request.version"
+                          />
+                        </div>
+
+                        <div class="flex space-x-6">
+                          <p>status</p>
+                          <input
+                            type="text"
+                            placeholder="200"
+                            v-model="ib.streamSettings.tcpSettings.header.response.status"
+                          />
+                        </div>
+
+                        <div class="flex space-x-6">
+                          <p>reason</p>
+                          <input
+                            type="text"
+                            placeholder="OK"
+                            v-model="ib.streamSettings.tcpSettings.header.response.reason"
+                          />
+                        </div>
+
+                        <div class="border border-black p-2">
+                          <p>headers</p>
+
+                          <div class="flex">
+                            <p>Pragma</p>
+                            <input
+                              type="text"
+                              v-model="ib.streamSettings.tcpSettings.header.response.headers.Pragma"
+                              placeholder="no-cache"
+                            />
+                          </div>
+
+                          <div>
+                            <p>Content-Type</p>
+
+                            <div
+                              v-for="(p, ctIdx) in ib.streamSettings.tcpSettings.header.response.headers['Content-Type']"
+                              class="flex"
+                            >
+                              <input
+                                type="text"
+                                v-model="ib.streamSettings.tcpSettings.header.response.headers['Content-Type'][ctIdx]"
+                                :key="ctIdx"
+                              />
+
+                              <button
+                                @click="ib.streamSettings.tcpSettings.header.response.headers['Content-Type'].splice(ctIdx, 1);"
+                              >
+                                delete this
+                              </button>
+                            </div>
+                            <button
+                              @click="ib.streamSettings.tcpSettings.header.response.headers['Content-Type'].push('video/mpeg')"
+                            >
+                              Add New Content-Type
+                            </button>
+                          </div>
+
+                          <div>
+                            <p>Transfer-Encoding</p>
+
+                            <div
+                              v-for="(p, teIdx) in ib.streamSettings.tcpSettings.header.response.headers['Transfer-Encoding']"
+                              class="flex"
+                            >
+                              <input
+                                type="text"
+                                v-model="ib.streamSettings.tcpSettings.header.response.headers['Transfer-Encoding'][teIdx]"
+                                :key="teIdx"
+                              />
+
+                              <button
+                                @click="ib.streamSettings.tcpSettings.header.response.headers['Transfer-Encoding'].splice(teIdx, 1);"
+                              >
+                                delete this
+                              </button>
+                            </div>
+                            <button
+                              @click="ib.streamSettings.tcpSettings.header.response.headers['Transfer-Encoding'].push('chunked')"
+                            >
+                              Add New Transfer-Encoding
+                            </button>
+                          </div>
+
+                          <div>
+                            <p>Connection</p>
+
+                            <div
+                              v-for="(p, connIdx) in ib.streamSettings.tcpSettings.header.response.headers.Connection"
+                              class="flex"
+                            >
+                              <input
+                                type="text"
+                                v-model="ib.streamSettings.tcpSettings.header.response.headers.Connection[connIdx]"
+                                :key="connIdx"
+                              />
+
+                              <button
+                                @click="ib.streamSettings.tcpSettings.header.response.headers.Connection.splice(connIdx, 1);"
+                              >
+                                delete this
+                              </button>
+                            </div>
+                            <button
+                              @click="ib.streamSettings.tcpSettings.header.response.headers.Connection.push('keep-alive')"
+                            >
+                              Add New Connection
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- tcpSettings -->
+                  </div>
+                  <!-- streamSettings -->
+                </div>
+              </div>
+            </li>
+          </ul>
+
+          <div class="flex justify-between">
+            <h3>inbounds.json</h3>
+
+            <label
+              class="relative flex justify-between items-center group p-2 text-xl"
+            >
+              Trim Empty Entries?
+              <input
+                type="checkbox"
+                v-model="serverInbounds_removeEmptyEntry"
+                class="absolute left-1/2 -translate-x-1/2 w-full h-full peer appearance-none rounded-md"
+              />
+              <span
+                class="w-16 h-10 flex items-center flex-shrink-0 ml-4 p-1 bg-gray-300 rounded-full duration-300 ease-in-out peer-checked:bg-green-400 after:w-8 after:h-8 after:bg-white after:rounded-full after:shadow-md after:duration-300 peer-checked:after:translate-x-6 group-hover:after:translate-x-1"
+              ></span>
+            </label>
+          </div>
+
+          <textarea
+            rows="8"
+            ref="textForm"
+            class=""
+            readonly
+            v-html="getJsonOf( {'inbounds': serverInbounds_removeEmptyEntry ?  removeEmptyOfObject(inbounds) : inbounds } ) "
+          ></textarea>
+
+          <!-- Inbounds-->
+        </div>
+
+        <hr class="py-12 mt-12" />
+
+        <main>
+          <h1 class="pb-12">Auto Generated Client Settings</h1>
+
+          <p>
+            We recommend using "v2ray -c inbounds.json -c log.json -c dns.json
+            -c routing.json" as the client command.
+          </p>
+          <p>This way we can seperate settings in differet files.</p>
+
+          <div class="py-12">
+            <h2 class="px-6">Outbounds</h2>
+
+            <div
+              v-for="(ob, index) in clientOutbounds_final"
+              class="space-y-2 pb-6 flex flex-col mb-12"
+            >
+              <div class="flex space-x-8 px-8">
+                <div class="flex flex-col w-1/4">
+                  <textarea rows="8" class="" v-html="getJsonOf(ob)"></textarea>
+                </div>
+
+                <div class="flex flex-col flex-grow space-y-6">
+                  <label
+                    class="relative flex justify-between items-center group p-2 text-xl"
+                  >
+                    Use Reverse Proxy (Nginx/Caddy etc. )?
+                    <input
+                      type="checkbox"
+                      v-model="clientOutbounds_customizePart.useNginxReverseProxy[ob.tag]"
+                      class="absolute left-1/2 -translate-x-1/2 w-full h-full peer appearance-none rounded-md"
+                    />
+                    <span
+                      class="w-16 h-10 flex items-center flex-shrink-0 ml-4 p-1 bg-gray-300 rounded-full duration-300 ease-in-out peer-checked:bg-green-400 after:w-8 after:h-8 after:bg-white after:rounded-full after:shadow-md after:duration-300 peer-checked:after:translate-x-6 group-hover:after:translate-x-1"
+                    ></span>
+                  </label>
+                  <div class="flex space-x-6">
+                    <p>Tag</p>
+                    <input
+                      class=""
+                      type="text"
+                      v-model="clientOutbounds_customizePart.tags[index]"
+                    />
+                  </div>
+
+                  <div class="flex space-x-6">
+                    <strong class="">share url:</strong>
+                    <input
+                      class="flex-grow"
+                      type="text"
+                      readonly
+                      v-model="generateUrl_and_QRCode(index)"
+                    />
+                  </div>
+
+                  <a
+                    href="https://cli.im"
+                    target="_blank"
+                    class="text-blue-500 border border-black italic w-fit"
+                    >Get QRCode</a
+                  >
+
+                  <p>protocol: {{ ob.protocol }}</p>
+
+                  <div class="flex space-x-6">
+                    <strong>address*</strong>
+                    <input
+                      class=""
+                      type="text"
+                      v-model="clientOutbounds_customizePart.addresses[ob.tag]"
+                      placeholder="6.6.6.6 or  yourdomain.com"
+                    />
+                  </div>
+
+                  <div>
+                    <h4 v-if="ob.protocol == 'vmess'">clients</h4>
+
+                    <div v-if="ob.protocol == 'vmess'">
+                      <div
+                        v-for="(cli, cid) in ob.settings.vnext[0].users"
+                        class="border border-black"
+                      >
+                        <p>security</p>
+                        <select
+                          v-model="clientOutbounds_customizePart.vmess_security[ob.tag]"
+                        >
+                          <option value="auto">auto</option>
+                          <option value="none">none</option>
+                          <option value="zero">zero</option>
+                          <option value="aes-128-gcm">aes-128-gcm</option>
+                          <option value="chacha20-poly1305">
+                            chacha20-poly1305
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div v-if="ob.streamSettings.network == 'ws'">
+                    <h4>wsSettings</h4>
+                    <div class="flex space-x-6">
+                      <p>headers.Host</p>
+
+                      <input
+                        class=""
+                        type="text"
+                        v-model=" clientOutbounds_customizePart
+                        .wsSettings_headers_host[ob.tag]"
+                        placeholder="yourdomain.com"
+                      />
+                    </div>
+                  </div>
+
+                  <div v-if="ob.streamSettings.security == 'tls'">
+                    <h4>tlsSettings</h4>
+                    <div class="flex space-x-6">
+                      <p>serverName</p>
+
+                      <input
+                        class=""
+                        type="text"
+                        v-model="clientOutbounds_customizePart.tlsSettings_serverName[ob.tag]"
+                        placeholder="yourdomain.com"
+                      />
+                    </div>
+
+                    <div class="flex space-x-6">
+                      <p>allowInsecure</p>
+                      <select
+                        v-model="clientOutbounds_customizePart.tlsSettings_allowInsecure[ob.tag]"
+                      >
+                        <option value="true">true</option>
+                        <option value="false">false</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <hr />
+            </div>
+          </div>
+        </main>
+
+        <!-- vue app-->
+      </div>
+    </div>
+    <script>
+      function compactObj(obj, fn) {
+        for (var i in obj) {
+          if (typeof obj[i] === "object") {
+            compactObj(obj[i], fn);
+          }
+          if (fn(obj[i])) {
+            delete obj[i];
+          }
+        }
+      }
+
+      function isEmpty(foo) {
+        if (typeof foo === "object") {
+          for (var i in foo) {
+            return false;
+          }
+          return true;
+        } else {
+          return foo === "" || foo === null || foo === undefined;
+        }
+      }
+
+      function removeEmptyOfObject(obj) {
+        var newobj = JSON.parse(JSON.stringify(obj));
+        compactObj(newobj, isEmpty);
+        return newobj;
+      }
+      var app2 = new Vue({
+        el: "#app-2",
+        data: {
+          useXray: false,
+          serverInbounds_removeEmptyEntry: true,
+          inbounds: [],
+          clientOutbounds_customizePart: {
+            tags: [],
+            vmess_security: {},
+            addresses: {},
+            tlsSettings_serverName: {},
+            tlsSettings_allowInsecure: {},
+            wsSettings_headers_host: {},
+            useNginxReverseProxy: {},
+          },
+          log: {
+            access: "/var/log/v2ray/access.log",
+            error: "/var/log/v2ray/error.log",
+            loglevel: "warning",
+          },
+          routing: {
+            domainStrategy: "AsIs",
+            rules: [
+              {
+                type: "field",
+                domain: ["geosite:netflix"],
+                outboundTag: "IP-V6",
+              },
+              {
+                type: "field",
+                ip: ["geoip:private"],
+                outboundTag: "block",
+              },
+            ],
+          },
+          outbounds: [
+            {
+              protocol: "freedom",
+              tag: "direct",
+            },
+            {
+              protocol: "blackhole",
+              tag: "block",
+            },
+            {
+              protocol: "freedom",
+              settings: {
+                domainStrategy: "UseIPv6",
+              },
+              tag: "IP-V6",
+            },
+          ],
+        },
+        computed: {
+          clientOutbounds_generated() {
+            var arr = [];
+            this.inbounds.forEach((ib) => {
+              var obj = {
+                tag: "clientTag_for_server_" + ib.tag,
+                protocol: ib.protocol,
+                settings: {},
+                streamSettings: {
+                  network: ib.streamSettings.network,
+                  security: ib.streamSettings.security,
+                },
+              };
+
+              if (ib.streamSettings.network == "ws") {
+                obj.streamSettings.wsSettings = {
+                  path: ib.streamSettings.wsSettings.path,
+                };
+              } else if (ib.streamSettings.network == "grpc") {
+                obj.streamSettings.grpcSettings = {
+                  serviceName: ib.streamSettings.grpcSettings.serviceName,
+                };
+              }
+
+              var vnextObj = [
+                {
+                  //address: "1.1.1.1",
+                  port: ib.port,
+                  users: [],
+                },
+              ];
+
+              switch (ib.protocol) {
+                case "vless": {
+                  ib.settings.clients.forEach((cli) => {
+                    vnextObj[0].users.push({
+                      id: cli.id,
+                      encryption: "none",
+                      level: cli.level,
+                    });
+                  });
+
+                  break;
+                }
+                case "vmess": {
+                  ib.settings.clients.forEach((cli) => {
+                    vnextObj[0].users.push({
+                      id: cli.id,
+                      security: "auto",
+                      level: cli.level,
+                    });
+                  });
+
+                  break;
+                }
+              }
+
+              obj.settings.vnext = vnextObj;
+
+              arr.push(obj);
+            });
+            return arr;
+          },
+          clientOutbounds_final() {
+            var generated = this.clientOutbounds_generated;
+            let final = JSON.parse(JSON.stringify(generated));
+
+            let ldif =
+              generated.length - this.clientOutbounds_customizePart.tags.length;
+            if (ldif > 0) {
+              for (var i = 0; i < ldif; i++) {
+                this.clientOutbounds_customizePart.tags.push(
+                  "newTag_" + Math.random().toString(36).slice(-8)
+                );
+              }
+            }
+
+            final.forEach((ob, idx) => {
+              ob.tag = this.clientOutbounds_customizePart.tags[idx];
+
+              ob.settings.vnext[0].address =
+                this.clientOutbounds_customizePart.addresses[ob.tag];
+
+              // When using nginx reverse proxy, vless server setting didn't set streamSettings.network,
+              // but the client must use tls as nginx server use tls before forward to vless.
+              //
+              let isUseReverseProxy =
+                this.clientOutbounds_customizePart.useNginxReverseProxy[ob.tag];
+              if (isUseReverseProxy) {
+                ob.settings.vnext[0].port = 443;
+                ob.streamSettings.security = "tls";
+              }
+
+              if (ob.protocol == "vmess") {
+                ob.settings.vnext[0].users.forEach((user) => {
+                  user.security =
+                    this.clientOutbounds_customizePart.vmess_security[ob.tag];
+                });
+              }
+
+              if (ob.streamSettings.network == "ws") {
+                if (
+                  typeof this.clientOutbounds_customizePart
+                    .wsSettings_headers_host[ob.tag] != "undefined"
+                ) {
+                  ob.streamSettings.wsSettings.headers = {
+                    Host: this.clientOutbounds_customizePart
+                      .wsSettings_headers_host[ob.tag],
+                  };
+                }
+              }
+
+              if (ob.streamSettings.security == "tls") {
+                var curTlsSettings = {};
+
+                var sName =
+                  this.clientOutbounds_customizePart.tlsSettings_serverName[
+                    ob.tag
+                  ];
+
+                if (typeof sName != "undefined" && sName != "") {
+                  curTlsSettings.serverName = sName;
+                }
+
+                if (
+                  typeof this.clientOutbounds_customizePart
+                    .tlsSettings_allowInsecure[ob.tag] != "undefined"
+                ) {
+                  curTlsSettings.allowInsecure =
+                    this.clientOutbounds_customizePart.tlsSettings_allowInsecure[
+                      ob.tag
+                    ];
+                }
+
+                ob.streamSettings.tlsSettings = curTlsSettings;
+              }
+            });
+
+            return final;
+          },
+        },
+        methods: {
+          updateSelf() {
+            this.$forceUpdate();
+          },
+          createNewInbound() {
+            this.inbounds.push({
+              tag: "newInbound",
+              listen: "0.0.0.0",
+              settings: {
+                clients: [],
+                fallbacks: [],
+              },
+              streamSettings: {
+                tlsSettings: {
+                  alpn: [],
+                  certificates: [],
+                },
+                grpcSettings: {},
+                wsSettings: {},
+                tcpSettings: {
+                  header: {
+                    request: {
+                      path: [],
+                      headers: {
+                        Host: [],
+                        "User-Agent": [],
+                        "Accept-Encoding": [],
+                        Connection: [],
+                      },
+                    },
+                    response: {
+                      headers: {
+                        "Content-Type": [],
+                        "Transfer-Encoding": [],
+                        Connection: [],
+                      },
+                    },
+                  },
+                },
+              },
+            });
+          },
+          getJsonOf(d) {
+            var jsonStr = JSON.stringify(d, null, 2);
+            return jsonStr;
+          },
+          deleteInbound(idx) {
+            this.inbounds.splice(idx, 1);
+            //console.log(this.inbounds);
+          },
+          addInboundClient(idx) {
+            this.inbounds[idx].settings.clients.push({
+              id: uuid(),
+            });
+          },
+          deleteClient(index, cid) {
+            this.inbounds[index].settings.clients.splice(cid, 1);
+          },
+          addVmessDetour(idx) {
+            if (typeof this.inbounds[idx].settings.detour == "undefined") {
+              //this.inbounds[idx].settings.detour = { to: "tag_to_detour" };
+              this.inbounds[idx].settings.detour = {};
+            }
+
+            return true;
+          },
+          addDecryptionNone(idx) {
+            //for vless
+            this.inbounds[idx].settings.decryption = "none";
+            return true;
+          },
+          addInboundFallbackForVless(idx) {
+            if (typeof this.inbounds[idx].settings.fallbacks == "undefined") {
+              this.inbounds[idx].settings.fallbacks = [];
+            }
+            this.inbounds[idx].settings.fallbacks.push({});
+          },
+          deleteFallback(idx, fid) {
+            this.inbounds[idx].settings.fallbacks.splice(fid, 1);
+          },
+          addInboundNewTlsCertificate(idx) {
+            if (
+              typeof this.inbounds[idx].streamSettings.tlsSettings
+                .certificates == "undefined"
+            ) {
+              this.inbounds[idx].streamSettings.tlsSettings.certificates = [];
+            }
+            this.inbounds[idx].streamSettings.tlsSettings.certificates.push({});
+          },
+          deleteCert(idx, cid) {
+            this.inbounds[idx].streamSettings.tlsSettings.certificates.splice(
+              cid,
+              1
+            );
+          },
+
+          generateUrl_and_QRCode(idx) {
+            var ob = this.clientOutbounds_final[idx];
+
+            //console.log("generateUrl_and_QRCode called",ob.settings.vnext[0].users[0])
+
+            if (typeof ob.settings.vnext[0].users[0] == "undefined") {
+              return "";
+            }
+
+            var str =
+              ob.protocol +
+              "://" +
+              ob.settings.vnext[0].users[0].id +
+              "@" +
+              ob.settings.vnext[0].address +
+              ":" +
+              ob.settings.vnext[0].port +
+              "?";
+
+            var values = {};
+
+            if (ob.protocol == "vmess") {
+              if (
+                typeof ob.settings.vnext[0].users[0].security != "undefined"
+              ) {
+                values.encryption = ob.settings.vnext[0].users[0].security;
+              }
+            } else if (ob.protocol == "vless") {
+              if (
+                typeof ob.settings.vnext[0].users[0].encryption != "undefined"
+              ) {
+                values.encryption = ob.settings.vnext[0].users[0].encryption;
+              }
+            }
+
+            if (typeof ob.streamSettings.network != "undefined") {
+              values.type = ob.streamSettings.network;
+            }
+
+            if (typeof ob.streamSettings.security != "undefined") {
+              values.security = ob.streamSettings.security;
+
+              if (
+                values.security == "tls" &&
+                typeof ob.streamSettings.tlsSettings != "undefined"
+              ) {
+                if (
+                  typeof ob.streamSettings.tlsSettings.serverName != "undefined"
+                ) {
+                  values.sni = ob.streamSettings.tlsSettings.serverName;
+                }
+              }
+            }
+
+            if (
+              values.type == "ws" &&
+              typeof ob.streamSettings.wsSettings != "undefined"
+            ) {
+              if (typeof ob.streamSettings.wsSettings.path != "undefined") {
+                values.path = encodeURIComponent(
+                  ob.streamSettings.wsSettings.path
+                );
+              }
+              if (typeof ob.streamSettings.wsSettings.headers != "undefined") {
+                values.host = ob.streamSettings.wsSettings.headers.Host;
+              }
+            }
+
+            if (
+              values.type == "grpc" &&
+              typeof ob.streamSettings.grpcSettings != "undefined"
+            ) {
+              if (
+                typeof ob.streamSettings.grpcSettings.serviceName != "undefined"
+              ) {
+                values.serviceName = ob.streamSettings.grpcSettings.serviceName;
+              }
+            }
+
+            let valuesStrArray = [];
+
+            for (const key in values) {
+              if (Object.hasOwnProperty.call(values, key)) {
+                const v = values[key];
+
+                valuesStrArray.push(key + "=" + v);
+              }
+            }
+
+            let valuesStr = valuesStrArray.join("&");
+            str += valuesStr + "#" + encodeURIComponent(ob.tag);
+
+            return str;
+          },
+        },
+      });
+
+      function uuid() {
+        var s = [];
+        var hexDigits = "0123456789abcdef";
+        for (var i = 0; i < 36; i++) {
+          s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
+        }
+        s[14] = "4";
+        s[19] = hexDigits.substr((s[19] & 0x3) | 0x8, 1);
+        s[8] = s[13] = s[18] = s[23] = "-";
+
+        var uuid = s.join("");
+        return uuid;
+      }
+    </script>
+  </body>
+</html>
