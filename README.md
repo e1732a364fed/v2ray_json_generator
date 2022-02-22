@@ -64,5 +64,14 @@ x-ui生成的json文件根本不会给你看，你始终不了解v2ray配置的j
 
 还有就是，x-ui必须一致开着，留了一个网页后门，容易被攻击，不够隐蔽；
 
+x-ui会自动下载xray版本，如果它下载的是魔改过的版本，那就是有安全风险的。目前应该不会，但是我就是为了安全，才搞得纯本地的web app
+
+更不用说，我可能又揭露了一个 xray的 xtls的重大风险，见：https://github.com/hahahrfool/xtls-/blob/main/README.md
+
+总之还是转型v2ray吧
+
 ## 交流
 交流电报群： https://t.me/shadowrocket_unofficial
+
+
+
