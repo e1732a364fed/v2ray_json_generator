@@ -92,6 +92,11 @@ https://milione.cc/?p=783
 
 这个是windows端的程序，不仅有 编译软件的风险，而且依然功能没我的强
 
+3.
+https://github.com/htfy96/v2ray-config-gen
+
+这个和我的类似，不过已经超过6年没有维护了，不支持vless，而且文件太多。本项目的理念就是文件越少越好。
+
 ## 交流
 交流电报群： https://t.me/shadowrocket_unofficial
 
