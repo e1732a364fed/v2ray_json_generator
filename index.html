@@ -49,8 +49,8 @@
           >See v2ray document</a
         >
       </p>
-      <div id="app-2" class="px-12">
-        <div class="flex flex-col">
+      <div id="theVueAppInstance1" class="px-12">
+        <div id="headTag" class="flex flex-col">
           <h1 class="pb-12 border-black border-2">Server Settings</h1>
           <div class="mb-12">
             <h2 class="mb-6">Guide</h2>
@@ -65,7 +65,10 @@
           </div>
 
           <h2 class="mb-6">General</h2>
-          <div class="grid md:grid-cols-3 space-x-6 mb-12">
+          <div
+            id="generalSettingsTag"
+            class="grid md:grid-cols-3 space-x-6 mb-12"
+          >
             <div class="flex flex-col">
               <h3>routing.json (can be nil)</h3>
               <textarea
@@ -95,7 +98,7 @@
             </div>
           </div>
         </div>
-        <div class="flex flex-col w-full space-y-12">
+        <main id="serverSettingsTag" class="flex flex-col w-full space-y-12">
           <h1 class="text-4xl">Inbounds</h1>
           <button class="btn1" @click="createNewInbound">
             Create a New Inbound
@@ -719,12 +722,14 @@
           ></textarea>
 
           <!-- Inbounds-->
-        </div>
+        </main>
 
         <hr class="py-12 mt-12" />
 
-        <main>
-          <h1 class="pb-12">Auto Generated Client Settings</h1>
+        <main id="clientSettingsTag">
+          <h1 class="pb-12 border-black border-2">
+            Auto Generated Client Settings
+          </h1>
 
           <p>
             We recommend using "v2ray -c inbounds.json -c log.json -c dns.json
@@ -866,6 +871,16 @@
           </div>
         </main>
 
+        <div
+          ref="scrollTopButton"
+          class="invisible sticky w-full flex justify-end bottom-0 pb-3 pr-5 transition"
+        >
+          <div class="text-gray-400 hover:text-blue-400 transition">
+            <button @click="window.scrollTo({ top: 0, behavior: 'auto' })">
+              Scroll to top
+            </button>
+          </div>
+        </div>
         <!-- vue app-->
       </div>
     </div>
@@ -898,7 +913,7 @@
         return newobj;
       }
       var app2 = new Vue({
-        el: "#app-2",
+        el: "#theVueAppInstance1",
         data: {
           useXray: false,
           serverInbounds_removeEmptyEntry: true,
@@ -949,6 +964,9 @@
               tag: "IP-V6",
             },
           ],
+        },
+        mounted() {
+          window.addEventListener("scroll", this.handleScroll);
         },
         computed: {
           clientOutbounds_generated() {
@@ -1092,6 +1110,15 @@
           },
         },
         methods: {
+          handleScroll() {
+            const scrollBtn = this.$refs.scrollTopButton;
+
+            if (window.scrollY > 0) {
+              scrollBtn.classList.remove("invisible");
+            } else {
+              scrollBtn.classList.add("invisible");
+            }
+          },
           updateSelf() {
             this.$forceUpdate();
           },
