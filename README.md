@@ -74,7 +74,7 @@ x-ui生成的json文件根本不会给你看，你始终不了解v2ray配置的j
 
 x-ui会自动下载xray版本，如果它下载的是魔改过的版本，那就是有安全风险的。目前应该不会，但是我就是为了安全，才搞得纯本地的web app
 
-更不用说，我可能又揭露了一个 xray的 xtls的重大风险，见：https://github.com/hahahrfool/xtls-/blob/main/README.md
+更不用说，我可能又揭露了一个 xray的 xtls的重大风险，见：https://github.com/e1732a364fed/xtls-/blob/main/README.md
 
 总之还是转型v2ray吧
 
@@ -96,9 +96,3 @@ https://milione.cc/?p=783
 https://github.com/htfy96/v2ray-config-gen
 
 这个和我的类似，不过已经超过6年没有维护了，不支持vless，而且文件太多。本项目的理念就是文件越少越好。
-
-## 交流
-交流电报群： https://t.me/shadowrocket_unofficial
-
-
-
